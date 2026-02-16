@@ -1,13 +1,14 @@
 ---
 name: cloudflare
 description: Manage Cloudflare domains, DNS records, SSL settings, zone configuration, firewall rules, tunnels, and analytics via the Cloudflare API. Use when the user asks to set up a domain, add/edit/delete DNS records, configure SSL, check zone settings, manage Cloudflare Tunnels, view analytics, or any Cloudflare account management task.
-env:
-  - name: CLOUDFLARE_API_TOKEN
-    required: true
-    description: Cloudflare API token (create at dash.cloudflare.com/profile/api-tokens)
-  - name: CLOUDFLARE_ACCOUNT_ID
-    required: false
-    description: Cloudflare Account ID (needed for tunnel operations only)
+primaryEnv: CLOUDFLARE_API_TOKEN
+requires:
+  env:
+    - CLOUDFLARE_API_TOKEN
+  bins:
+    - curl
+    - jq
+    - openssl
 ---
 
 # Cloudflare
@@ -16,7 +17,7 @@ Manage Cloudflare zones, DNS, SSL, tunnels, and settings via the bundled `script
 
 ## Prerequisites
 
-- `curl` and `jq` must be available on the system
+- `curl`, `jq`, and `openssl` must be available on the system
 - Set `CLOUDFLARE_API_TOKEN` environment variable
 - Optionally set `CLOUDFLARE_ACCOUNT_ID` for tunnel operations
 
