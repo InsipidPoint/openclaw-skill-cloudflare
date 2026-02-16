@@ -43,6 +43,11 @@ cmd_zone_get() {
   _get "/zones/$zone_id" | _jq_check '.result | {id, name, status, name_servers, plan: .plan.name}'
 }
 
+cmd_zone_id() {
+  local domain="${1:?Usage: cf zone-id <domain>}"
+  _get "/zones?name=$domain" | _jq_check -r '.result[0].id // empty'
+}
+
 # --- DNS records ---
 
 cmd_dns_list() {
@@ -82,6 +87,22 @@ cmd_dns_delete() {
   _delete "/zones/$zone_id/dns_records/$record_id" | _jq_check '.'
 }
 
+cmd_dns_export() {
+  local zone_id="${1:?Usage: cf dns-export <zone_id>}"
+  _get "/zones/$zone_id/dns_records?per_page=500" | _jq_check '[.result[] | {type, name, content, proxied, ttl, priority}]'
+}
+
+cmd_dns_import() {
+  local zone_id="${1:?Usage: cf dns-import <zone_id> <file.json>}"
+  local file="${2:?}"
+  local count=0
+  while IFS= read -r rec; do
+    _post "/zones/$zone_id/dns_records" "$rec" | _jq_check '.result | {id, type, name, content}' 2>/dev/null
+    ((count++))
+  done < <(jq -c '.[]' "$file")
+  echo "Imported $count records" >&2
+}
+
 # --- zone settings ---
 
 cmd_settings_list() {
@@ -116,6 +137,20 @@ cmd_ssl_set() {
   cmd_setting_set "$zone_id" "ssl" "$mode"
 }
 
+# --- cache ---
+
+cmd_cache_purge() {
+  local zone_id="${1:?Usage: cf cache-purge <zone_id> [url1 url2 ...]}"
+  shift
+  local data
+  if [[ $# -eq 0 ]]; then
+    data='{"purge_everything":true}'
+  else
+    data=$(printf '%s\n' "$@" | jq -R . | jq -sc '{files:.}')
+  fi
+  _post "/zones/$zone_id/purge_cache" "$data" | _jq_check '.result'
+}
+
 # --- page rules ---
 
 cmd_pagerules_list() {
@@ -143,6 +178,22 @@ cmd_tunnel_get() {
   _get "/accounts/$acct/cfd_tunnel/$tunnel_id" | _jq_check '.result'
 }
 
+cmd_tunnel_create() {
+  local acct="${CLOUDFLARE_ACCOUNT_ID:?Set CLOUDFLARE_ACCOUNT_ID}"
+  local name="${1:?Usage: cf tunnel-create <name>}"
+  local secret
+  secret=$(openssl rand -base64 32)
+  local data
+  data=$(jq -n --arg n "$name" --arg s "$secret" '{name:$n, tunnel_secret:$s, config_src:"cloudflare"}')
+  _post "/accounts/$acct/cfd_tunnel" "$data" | _jq_check '.result | {id, name, status, created_at}'
+}
+
+cmd_tunnel_delete() {
+  local acct="${CLOUDFLARE_ACCOUNT_ID:?Set CLOUDFLARE_ACCOUNT_ID}"
+  local tunnel_id="${1:?Usage: cf tunnel-delete <tunnel_id>}"
+  _delete "/accounts/$acct/cfd_tunnel/$tunnel_id" | _jq_check '.'
+}
+
 # --- token verify ---
 
 cmd_verify() {
@@ -157,28 +208,79 @@ cmd_analytics() {
   _get "/zones/$zone_id/analytics/dashboard?since=$since" | _jq_check '.result.totals'
 }
 
+# --- help ---
+
+cmd_help() {
+  cat <<'EOF'
+cf — Cloudflare API wrapper
+
+Zones:
+  zones [domain]              List zones (filter by domain)
+  zone-get <zone_id>          Zone details
+  zone-id <domain>            Get zone ID from domain name
+
+DNS:
+  dns-list <z> [type] [name]  List DNS records
+  dns-create <z> <type> <name> <content> [proxied] [ttl]
+  dns-update <z> <rec_id> <type> <name> <content> [proxied] [ttl]
+  dns-delete <z> <rec_id>     Delete a record
+  dns-export <z>              Export records as JSON
+  dns-import <z> <file.json>  Import records from JSON
+
+SSL & Settings:
+  ssl-get <z>                 Current SSL mode
+  ssl-set <z> <mode>          Set SSL (off/flexible/full/strict)
+  settings-list <z>           All zone settings
+  setting-get <z> <key>       Get a setting
+  setting-set <z> <key> <val> Update a setting
+
+Cache:
+  cache-purge <z> [urls...]   Purge URLs or everything
+
+Tunnels (requires CLOUDFLARE_ACCOUNT_ID):
+  tunnels-list                List tunnels
+  tunnel-get <id>             Tunnel details
+  tunnel-create <name>        Create a tunnel
+  tunnel-delete <id>          Delete a tunnel
+
+Other:
+  firewall-list <z>           List firewall rules
+  pagerules-list <z>          List page rules
+  analytics <z> [since_min]   Zone analytics (default: 24h)
+  verify                      Verify API token
+  help                        This message
+EOF
+}
+
 # --- dispatch ---
 
-cmd="${1:?Usage: cf <command> [args...]}"
-shift
+cmd="${1:-help}"
+shift 2>/dev/null || true
 
 case "$cmd" in
+  help|--help|-h)  cmd_help ;;
   verify)          cmd_verify "$@" ;;
   zones|zones-list) cmd_zones_list "$@" ;;
   zone-get)        cmd_zone_get "$@" ;;
+  zone-id)         cmd_zone_id "$@" ;;
   dns-list)        cmd_dns_list "$@" ;;
   dns-create)      cmd_dns_create "$@" ;;
   dns-update)      cmd_dns_update "$@" ;;
   dns-delete)      cmd_dns_delete "$@" ;;
+  dns-export)      cmd_dns_export "$@" ;;
+  dns-import)      cmd_dns_import "$@" ;;
   settings-list)   cmd_settings_list "$@" ;;
   setting-get)     cmd_setting_get "$@" ;;
   setting-set)     cmd_setting_set "$@" ;;
   ssl-get)         cmd_ssl_get "$@" ;;
   ssl-set)         cmd_ssl_set "$@" ;;
+  cache-purge)     cmd_cache_purge "$@" ;;
   pagerules-list)  cmd_pagerules_list "$@" ;;
   firewall-list)   cmd_firewall_list "$@" ;;
   tunnels-list)    cmd_tunnels_list "$@" ;;
   tunnel-get)      cmd_tunnel_get "$@" ;;
+  tunnel-create)   cmd_tunnel_create "$@" ;;
+  tunnel-delete)   cmd_tunnel_delete "$@" ;;
   analytics)       cmd_analytics "$@" ;;
-  *) echo "Unknown command: $cmd" >&2; exit 1 ;;
+  *) echo "Unknown command: $cmd (try 'cf help')" >&2; exit 1 ;;
 esac

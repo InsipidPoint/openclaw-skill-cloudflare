@@ -27,22 +27,29 @@ cf <command> [args...]
 
 | Command | Args | Description |
 |---------|------|-------------|
+| `help` | | Show all commands |
 | `verify` | | Verify API token is valid |
 | `zones` | `[domain]` | List zones (optionally filter by domain name) |
 | `zone-get` | `<zone_id>` | Get zone details |
+| `zone-id` | `<domain>` | Get zone ID from domain name |
 | `dns-list` | `<zone_id> [type] [name]` | List DNS records |
 | `dns-create` | `<zone_id> <type> <name> <content> [proxied] [ttl]` | Create DNS record |
 | `dns-update` | `<zone_id> <record_id> <type> <name> <content> [proxied] [ttl]` | Update DNS record |
 | `dns-delete` | `<zone_id> <record_id>` | Delete DNS record |
+| `dns-export` | `<zone_id>` | Export all records as JSON |
+| `dns-import` | `<zone_id> <file.json>` | Import records from JSON |
 | `settings-list` | `<zone_id>` | List all zone settings |
 | `setting-get` | `<zone_id> <setting>` | Get specific setting |
 | `setting-set` | `<zone_id> <setting> <value>` | Update a setting |
 | `ssl-get` | `<zone_id>` | Get current SSL mode |
 | `ssl-set` | `<zone_id> <mode>` | Set SSL mode (off/flexible/full/strict) |
+| `cache-purge` | `<zone_id> [url1 url2 ...]` | Purge specific URLs or everything |
 | `pagerules-list` | `<zone_id>` | List page rules |
 | `firewall-list` | `<zone_id>` | List firewall rules |
 | `tunnels-list` | | List Cloudflare Tunnels (needs ACCOUNT_ID) |
 | `tunnel-get` | `<tunnel_id>` | Get tunnel details |
+| `tunnel-create` | `<name>` | Create a tunnel (needs ACCOUNT_ID) |
+| `tunnel-delete` | `<tunnel_id>` | Delete a tunnel (needs ACCOUNT_ID) |
 | `analytics` | `<zone_id> [since_minutes]` | Zone analytics (default: last 24h) |
 
 ### Proxied flag
