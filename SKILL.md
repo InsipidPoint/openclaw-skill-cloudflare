@@ -1,26 +1,34 @@
 ---
 name: cloudflare
 description: Manage Cloudflare domains, DNS records, SSL settings, zone configuration, firewall rules, tunnels, and analytics via the Cloudflare API. Use when the user asks to set up a domain, add/edit/delete DNS records, configure SSL, check zone settings, manage Cloudflare Tunnels, view analytics, or any Cloudflare account management task.
+env:
+  - name: CLOUDFLARE_API_TOKEN
+    required: true
+    description: Cloudflare API token (create at dash.cloudflare.com/profile/api-tokens)
+  - name: CLOUDFLARE_ACCOUNT_ID
+    required: false
+    description: Cloudflare Account ID (needed for tunnel operations only)
 ---
 
 # Cloudflare
 
-Manage Cloudflare zones, DNS, SSL, tunnels, and settings via the `cf` CLI wrapper.
+Manage Cloudflare zones, DNS, SSL, tunnels, and settings via the bundled `scripts/cf` bash script.
 
-## Setup
+## Prerequisites
 
-Requires environment variables:
-- `CLOUDFLARE_API_TOKEN` — API token (create at dash.cloudflare.com/profile/api-tokens)
-- `CLOUDFLARE_ACCOUNT_ID` — Account ID (needed for tunnel operations only; find in dashboard sidebar)
+- `curl` and `jq` must be available on the system
+- Set `CLOUDFLARE_API_TOKEN` environment variable
+- Optionally set `CLOUDFLARE_ACCOUNT_ID` for tunnel operations
 
 ## CLI: `scripts/cf`
 
-All operations go through the `cf` bash script. Run from skill directory or add to PATH.
+All operations go through the bundled `scripts/cf` bash script (included in this skill). No external downloads needed.
 
 ```bash
-CF="$(dirname "$0")/../skills/cloudflare/scripts/cf"
-# or if on PATH:
-cf <command> [args...]
+# Run from skill directory
+./scripts/cf <command> [args...]
+# Or reference by absolute path
+/path/to/skills/cloudflare/scripts/cf <command> [args...]
 ```
 
 ### Commands
