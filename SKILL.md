@@ -12,7 +12,7 @@ env:
 
 # Cloudflare
 
-Manage Cloudflare zones, DNS, SSL, tunnels, and settings via the bundled `scripts/cf` bash script.
+Manage Cloudflare zones, DNS, SSL, tunnels, and settings via the bundled `scripts/cf.sh` bash script.
 
 ## Prerequisites
 
@@ -20,15 +20,15 @@ Manage Cloudflare zones, DNS, SSL, tunnels, and settings via the bundled `script
 - Set `CLOUDFLARE_API_TOKEN` environment variable
 - Optionally set `CLOUDFLARE_ACCOUNT_ID` for tunnel operations
 
-## CLI: `scripts/cf`
+## CLI: `scripts/cf.sh`
 
-All operations go through the bundled `scripts/cf` bash script (included in this skill). No external downloads needed.
+All operations go through the bundled `scripts/cf.sh` bash script (included in this skill). No external downloads needed.
 
 ```bash
 # Run from skill directory
-./scripts/cf <command> [args...]
+./scripts/cf.sh <command> [args...]
 # Or reference by absolute path
-/path/to/skills/cloudflare/scripts/cf <command> [args...]
+/path/to/skills/cloudflare/scripts/cf.sh <command> [args...]
 ```
 
 ### Commands
