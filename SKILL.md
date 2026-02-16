@@ -1,14 +1,7 @@
 ---
 name: cloudflare
 description: Manage Cloudflare domains, DNS records, SSL settings, zone configuration, firewall rules, tunnels, and analytics via the Cloudflare API. Use when the user asks to set up a domain, add/edit/delete DNS records, configure SSL, check zone settings, manage Cloudflare Tunnels, view analytics, or any Cloudflare account management task.
-primaryEnv: CLOUDFLARE_API_TOKEN
-requires:
-  env:
-    - CLOUDFLARE_API_TOKEN
-  bins:
-    - curl
-    - jq
-    - openssl
+metadata: {"openclaw":{"primaryEnv":"CLOUDFLARE_API_TOKEN","requires":{"env":["CLOUDFLARE_API_TOKEN"],"bins":["curl","jq","openssl"]}}}
 ---
 
 # Cloudflare
